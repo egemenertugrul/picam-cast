@@ -1,0 +1,6 @@
+[project]
+name = "picam-cast"
+version = "0.1.0"
+description = "Stream any Raspberry Pi camera as an NDI source"
+requires-python = ">=3.13"
+dependencies = []
