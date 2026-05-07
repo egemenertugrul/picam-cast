@@ -1,32 +1,40 @@
 # picam-cast
 
-Stream any Raspberry Pi camera as an NDI source. Auto-discoverable on the local network — zero configuration on the receiver side.
+Streams a Raspberry Pi camera over NDI. Shows up on the network automatically, no IP config or port forwarding needed.
 
-## Usage
+Built for live performance use over wired Ethernet. The receiver just needs TouchDesigner (or any NDI tool) on the same network.
+
+## Setup
 
 ```bash
-# List modes available for your specific sensor
+bash setup.sh
+
+# if the NDI SDK download fails, pass your own mirror
+bash setup.sh --zip-url https://your-server.com/Install_NDI_SDK_v6_Linux.zip
+```
+
+Requires 64-bit Raspberry Pi OS and `picamera2` (`sudo apt install python3-picamera2`).
+
+## Running
+
+```bash
+# see what modes your camera supports
 .venv/bin/python3 stream_ndi.py --list-modes
 
-# Stream (default: 1080p30, source name "Pi Camera")
+# start streaming
 .venv/bin/python3 stream_ndi.py
 
-# Custom mode and source name
-.venv/bin/python3 stream_ndi.py --mode 720p60 --name "Stage Camera"
+# custom mode and source name
+.venv/bin/python3 stream_ndi.py --mode 720p60 --name "Stage Cam"
 
-# Show live fps stats
-.venv/bin/python3 stream_ndi.py -v
-
-# Stop: Ctrl+C
+# Ctrl+C to stop
 ```
 
 ## Modes
 
-Modes are derived from the connected sensor at startup. Run `--list-modes` to see what your camera supports.
-
 | Mode | Resolution | FPS |
 |---|---|---|
-| `max` | Sensor native | 30 |
+| `max` | sensor native | 30 |
 | `4k30` | 3840×2160 | 30 |
 | `1080p60` | 1920×1080 | 60 |
 | `1080p30` | 1920×1080 | 30 |
@@ -34,34 +42,16 @@ Modes are derived from the connected sensor at startup. Run `--list-modes` to se
 | `720p30` | 1280×720 | 30 |
 | `480p30` | 854×480 | 30 |
 
-Modes that exceed the sensor's native resolution are automatically excluded.
+Modes that exceed the sensor's resolution won't show up in `--list-modes`.
 
 ## Receiving
 
-**TouchDesigner:** Add an **NDI In TOP** — the Pi appears in the source dropdown by name automatically.
+In TouchDesigner, add an **NDI In TOP** and the Pi will appear in the source list by name.
 
-**Other tools:** [NDI Tools](https://ndi.video/tools/) (free), OBS, Resolume, VLC all support NDI natively or via plugin.
+For other tools (OBS, Resolume, VLC) install [NDI Tools](https://ndi.video/tools/).
 
-## Network
+## Tested on
 
-Designed for wired Ethernet on a shared LAN. Both Pi and receiver must be on the same network segment — NDI uses mDNS for auto-discovery.
-
-## Setup
-
-```bash
-# Standard
-bash setup.sh
-
-# If the default NDI SDK download fails, provide your own .zip URL
-bash setup.sh --zip-url https://your-server.com/Install_NDI_SDK_v6_Linux.zip
-```
-
-Requires a 64-bit Raspberry Pi OS (Pi 4 or Pi 5). `picamera2` must be installed via apt (`sudo apt install python3-picamera2`).
-
-## Tested cameras
-
-| Camera | Sensor | Max resolution |
+| Pi | Camera | Sensor |
 |---|---|---|
-| Camera Module 2 NoIR | IMX219 | 3280×2464 |
-
-*Contributions welcome for other modules (HQ, Camera Module 3, etc.)*
+| Raspberry Pi 4 (2GB) | Camera Module 2 NoIR | IMX219 |
