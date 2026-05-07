@@ -105,8 +105,14 @@ def run(source_name: str, mode: str, verbose: bool):
     sensor_model = cam.camera_properties.get("Model", "unknown")
     print(f"Sensor : {sensor_model} ({cam.sensor_resolution[0]}×{cam.sensor_resolution[1]})")
     print(f"Stream : {width}×{height} @ {fps}fps  [{mode}]")
-    print(f"NDI    : {ndi.send_get_source_name(sender)}")
+    print(f"NDI    : {source_name}")
     print("Ctrl+C to stop.")
+
+    # Allocate once — the binding stores a raw C pointer to this buffer.
+    # Writing in-place each frame avoids reallocation and dangling pointer crashes.
+    frame_buffer = np.zeros((height, width, 4), dtype=np.uint8)
+    frame_buffer[:, :, 3] = 255  # alpha always 255
+    video_frame.data = frame_buffer
 
     frame_count = 0
     t_start = time.monotonic()
@@ -114,13 +120,7 @@ def run(source_name: str, mode: str, verbose: bool):
     try:
         while running:
             frame_rgb = cam.capture_array("main")
-            alpha = np.full((height, width, 1), 255, dtype=np.uint8)
-            # Pass numpy array directly — binding stores a raw pointer to its buffer.
-            # Keep frame_rgbx alive until after send returns (do not use tobytes()).
-            frame_rgbx = np.ascontiguousarray(
-                np.concatenate([frame_rgb, alpha], axis=2)
-            )
-            video_frame.data = frame_rgbx
+            frame_buffer[:, :, :3] = frame_rgb
             ndi.send_send_video_v2(sender, video_frame)
 
             frame_count += 1
